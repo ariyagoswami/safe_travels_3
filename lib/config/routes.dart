@@ -1,15 +1,60 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:safe_travels_3/screens/add_review_screen.dart';
 import 'package:safe_travels_3/screens/location_selection_screen.dart';
+import 'package:safe_travels_3/screens/login_screen.dart';
+import 'package:safe_travels_3/screens/register_screen.dart';
+import 'package:safe_travels_3/screens/profile_screen.dart';
 import 'package:safe_travels_3/screens/review_detail_screen.dart';
 import 'package:safe_travels_3/screens/reviews_screen.dart';
 import 'package:safe_travels_3/screens/transportation_selection_screen.dart';
 
 class AppRouter {
+  static final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Check if user is logged in
+  static bool get isLoggedIn => _auth.currentUser != null;
+
+  // Redirect logic
+  static String? _redirectLogic(BuildContext context, GoRouterState state) {
+    // If the user is not logged in and not on login or register page, redirect to login
+    final isLoggingIn = state.matchedLocation == '/login' ||
+                        state.matchedLocation == '/register';
+    
+    if (!isLoggedIn && !isLoggingIn) {
+      return '/login';
+    }
+    
+    // If the user is logged in and on login or register page, redirect to home
+    if (isLoggedIn && isLoggingIn) {
+      return '/';
+    }
+    
+    // No redirection needed
+    return null;
+  }
+
   static final GoRouter router = GoRouter(
     initialLocation: '/',
+    redirect: _redirectLogic,
     routes: [
+      // Auth routes
+      GoRoute(
+        path: '/login',
+        name: 'login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/register',
+        name: 'register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
       GoRoute(
         path: '/',
         name: 'home',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:safe_travels_3/config/theme.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -12,6 +13,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isTransportation;
   final Widget? transportationDropdown;
   final String? transportationLabel;
+  final bool showProfileButton;
 
   const CustomAppBar({
     Key? key,
@@ -25,6 +27,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.isTransportation = false,
     this.transportationDropdown,
     this.transportationLabel,
+    this.showProfileButton = true,
   }) : super(key: key);
 
   @override
@@ -68,6 +71,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           IconButton(
             icon: const Icon(Icons.edit, color: AppTheme.white),
             onPressed: onEditPressed,
+          ),
+        if (showProfileButton)
+          IconButton(
+            icon: const Icon(Icons.person, color: AppTheme.white),
+            onPressed: () => context.push('/profile'),
+            tooltip: 'Profile',
           ),
       ],
     );

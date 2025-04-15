@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:safe_travels_3/config/constants.dart';
 import 'package:safe_travels_3/config/theme.dart';
 import 'package:safe_travels_3/data/septa_data.dart';
 import 'package:safe_travels_3/models/review_model.dart';
 import 'package:safe_travels_3/models/route_model.dart';
 import 'package:safe_travels_3/models/user_model.dart';
+import 'package:safe_travels_3/providers/user_provider.dart';
+import 'package:safe_travels_3/services/auth_service.dart';
 import 'package:safe_travels_3/services/review_service.dart';
 import 'package:safe_travels_3/widgets/custom_app_bar.dart';
 import 'package:safe_travels_3/widgets/star_rating.dart';
@@ -30,7 +33,6 @@ class AddReviewScreen extends StatefulWidget {
 
 class _AddReviewScreenState extends State<AddReviewScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
   final _reviewController = TextEditingController();
 
   String? _selectedAgeGroup;
@@ -61,7 +63,6 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
       _existingReview = await ReviewService.getReviewById(widget.reviewId!);
       if (_existingReview != null && mounted) {
         setState(() {
-          _usernameController.text = _existingReview!.username;
           _reviewController.text = _existingReview!.content;
           _selectedAgeGroup = _existingReview!.ageGroup;
           _punctualityRating = _existingReview!.punctualityRating;
@@ -90,7 +91,6 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
 
   @override
   void dispose() {
-    _usernameController.dispose();
     _reviewController.dispose();
     super.dispose();
   }
@@ -127,20 +127,6 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    TextFormField(
-                      controller: _usernameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Username',
-                        hintText: AppConstants.usernamePlaceholder,
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a username';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
                     _buildAgeGroupDropdown(),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -269,10 +255,25 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
 
   Future<void> _submitReview() async {
     print('_submitReview called');
+    
+    // Check if user is logged in
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (userProvider.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must be logged in to submit a review'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      context.push('/login');
+      return;
+    }
+    
     if (_formKey.currentState!.validate() &&
         _punctualityRating > 0 &&
         _safetyRating > 0 &&
-        _cleanlinessRating > 0) {
+        _cleanlinessRating > 0 &&
+        _selectedAgeGroup != null) {
       
       setState(() {
         _isLoading = true;
@@ -287,11 +288,13 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
           ),
         );
         
+        final user = userProvider.user!;
+        
         if (_isEditing && _existingReview != null) {
           // Update existing review
           await ReviewService.updateReview(
             id: _existingReview!.id,
-            username: _usernameController.text,
+            username: user.username,
             content: _reviewController.text,
             punctualityRating: _punctualityRating,
             safetyRating: _safetyRating,
@@ -328,8 +331,8 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
           }
           
           await ReviewService.addReview(
-            userId: 'user_${DateTime.now().millisecondsSinceEpoch}', // Generate a simple user ID
-            username: _usernameController.text,
+            userId: user.id,
+            username: user.username,
             routeId: routeId,
             routeName: routeName,
             content: _reviewController.text,

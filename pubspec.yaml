@@ -35,10 +35,10 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   
-  # Firebase - Commented out for now
-  # firebase_core: ^2.24.2
-  # firebase_auth: ^4.15.3
-  # cloud_firestore: ^4.13.6
+  # Firebase
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
   
   # Google Maps - Temporarily commented out
   # google_maps_flutter: ^2.5.3
@@ -56,6 +56,9 @@ dependencies:
   shared_preferences: ^2.2.2
   # dio: ^5.4.0
   intl: ^0.19.0
+  
+  # State Management
+  provider: ^6.1.1
 
 dev_dependencies:
   flutter_test:
